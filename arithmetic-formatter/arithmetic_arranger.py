@@ -6,19 +6,19 @@ def arithmetic_arranger(*args):
 
     for i in problems: #input validation
         if len(problems) > 5:
-            return "Error: Too many problems"
+            return "Error: Too many problems."
 
         if i.split()[1] not in ['+','-']:
-            return "Error: Operator must be '+' or '-'"
+            return "Error: Operator must be '+' or '-'."
 
         try:
-            i.split()[0].isdecimal() == True
-            i.split()[2].isdecimal() == True
+            int(i.split()[0])
+            int(i.split()[2])
         except:
-            return "Error: Numbers must only contain digits"
+            return "Error: Numbers must only contain digits."
 
-        if len(i.split()[0]) > 4 or len(i.split()[0]) > 4:
-            return "Error: Numbers cannot be more than four digits"
+        if len(i.split()[0]) > 4 or len(i.split()[2]) > 4:
+            return "Error: Numbers cannot be more than four digits."
 
     rows = [] #ordering problems into a printable format
     for count, value in enumerate(i.split() for i in problems):
