@@ -1,3 +1,1 @@
-
-arithmetic-formatter/__pycache__/arithmetic_arranger.cpython-310.pyc
-arithmetic-formatter/__pycache__/test_module.cpython-310-pytest-6.2.5.pyc
+*.pyc
