@@ -1,44 +1,42 @@
 import operator
-ops = {'+':operator.add, '-':operator.sub}
+from re import findall
 
-def arithmetic_arranger(*args):
-    problems = args[0]
-
-    for i in problems: #input validation
+def arithmetic_arranger(problems, display = False):
+    def validateEquations(operators, operands, other):
         if len(problems) > 5:
             return "Error: Too many problems."
-
-        if i.split()[1] not in ['+','-']:
+        elif any(not i for i in operators):
             return "Error: Operator must be '+' or '-'."
-
-        try:
-            int(i.split()[0])
-            int(i.split()[2])
-        except:
+        elif any(i for i in other):
             return "Error: Numbers must only contain digits."
-
-        if len(i.split()[0]) > 4 or len(i.split()[2]) > 4:
+        elif any(len(j) > 4 for i in operands for j in i):
             return "Error: Numbers cannot be more than four digits."
+        else:
+            return True
 
-    rows = [] #ordering problems into a printable format
-    for count, value in enumerate(i.split() for i in problems):
-        num1, sign, num2 = value[0], value[1], value[2]
-        maxlen = len( str( max( [int(num1),int(num2)] ) ) )
-        result = str( ops[sign](int(num1),int(num2)) )
+    def formatEquation(num1, sign, num2):
+        ops = {'+': operator.add, '-': operator.sub}
+        length = len(max([num1, num2], key = len)) + 1 + 1
+        return [
+            num1.rjust(length, ' '),
+            num2.rjust(length, ' ').replace(' ', sign, 1),
+            '-' * length,
+            str(ops[sign](int(num1),int(num2))).rjust(length, ' ')
+        ]
 
-        rows.append([ (' ' * 2) + (' ' * (maxlen-len(num1))) + num1,
-                      (sign + ' ') + (' ' * (maxlen-len(num2))) + num2,
-                      '-' * (2 + maxlen),
-                      ' ' * (maxlen + 2 - len(result)) + result ])
+    def displayEquations(display):
+        array = [formatEquation(*i.split(' ')) for i in problems]
+        array = ['    '.join(i) for i in [list(i) for i in zip(*array)]]
 
-    if len(args) == 1:
-        return '{}\n{}\n{}'.format(
-            '    '.join(i[0] for i in rows),
-            '    '.join(i[1] for i in rows),
-            '    '.join(i[2] for i in rows) )
-    else:
-        return '{}\n{}\n{}\n{}'.format(
-            '    '.join(i[0] for i in rows),
-            '    '.join(i[1] for i in rows),
-            '    '.join(i[2] for i in rows),
-            '    '.join(i[3] for i in rows) )
+        if display == True:
+            return '\n'.join(array)
+        else:
+            return '\n'.join(array[:len(array) - 1])
+
+    ### PARENT FUNCTION ###
+    test = validateEquations(
+        list(map(lambda x: findall(r'[+-]', x), problems)),
+        list(map(lambda x: findall(r'\d+', x), problems)),
+        list(map(lambda x: findall(r'[^\d\s+-]', x), problems))
+    )
+    return displayEquations(display) if test == True else test
