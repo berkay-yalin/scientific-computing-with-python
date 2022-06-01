@@ -1,36 +1,43 @@
 from datetime import datetime
+from datetime import datetime as dt
 from datetime import timedelta
 from calendar import day_name
 
-def add_time(*args):
-    if len(args) == 2:
-        info = '0001 01 01 {}'.format(args[0])
+def add_time(startHour, duration, startDay = None):
+    def getStartTime(hour, day):
+        return dt.strptime(f'0001 01 0{day} {hour}', '%Y %m %d %I:%M %p')
 
-        start = datetime.strptime(info,'%Y %m %d %I:%M %p')
-        stop = timedelta(hours   = int(args[1].split(':')[0]),
-                         minutes = int(args[1].split(':')[1])) + start
+    def getStopTime(stopHour, stopMinute):
+        return timedelta(hours = stopHour, minutes = stopMinute) + start
 
-        endDate = stop.strftime('%I:%M %p')
-        if endDate[0] == '0': endDate = endDate[1:]
-        difference = stop.day - start.day
+    def formatOutput(difference, endDate, weekday):
+        if weekday == None:
+            if difference == 0:
+                return endDate
+            elif difference == 1:
+                return f'{endDate} (next day)'
+            else:
+                return f'{endDate} ({difference} days later)'
+        else:
+            if difference == 0:
+                return f'{endDate}, {weekday}'
+            elif difference == 1:
+                return f'{endDate}, {weekday} (next day)'
+            else:
+                return f'{endDate}, {weekday} ({difference} days later)'
 
-        if difference == 0: return endDate
-        elif difference == 1: return '{} (next day)'.format(endDate)
-        else: return '{} ({} days later)'.format(endDate, difference)
+    ### PARENT FUNCTION ###
+    if startDay == None:
+        start = getStartTime(startHour, '1')
+    else:
+        start = getStartTime(startHour, list(day_name).index(startDay.title()) + 1)
+    stop = getStopTime(*[int(i) for i in duration.split(':')])
 
-    if len(args) == 3:
-        day = list(day_name).index(args[2].title()) + 1
-        info = '0001 01 0{} {}'.format(day, args[0])
+    endDate = stop.strftime('%I:%M %p')
+    if endDate[0] == '0':
+        endDate = endDate[1:]
 
-        start = datetime.strptime(info,'%Y %m %d %I:%M %p')
-        stop = timedelta(hours   = int(args[1].split(':')[0]),
-                         minutes = int(args[1].split(':')[1])) + start
-
-        endDate = stop.strftime('%I:%M %p')
-        if endDate[0] == '0': endDate = endDate[1:]
-        weekday = stop.strftime('%A')
-        difference = stop.day - start.day
-
-        if difference == 0: return '{}, {}'.format(endDate, weekday)
-        elif difference == 1: return '{}, {} (next day)'.format(endDate, weekday)
-        else: return '{}, {} ({} days later)'.format(endDate, weekday, difference)
+    if startDay == None:
+        return formatOutput(stop.day - start.day, endDate, None)
+    else:
+        return formatOutput(stop.day - start.day, endDate, stop.strftime('%A'))
