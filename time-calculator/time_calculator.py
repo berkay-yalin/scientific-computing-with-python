@@ -1,42 +1,49 @@
-from datetime import datetime as dt
-from datetime import timedelta
-from calendar import day_name
+WEEKDAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
 
-def add_time(startHour, duration, startDay = None):
-    def getStartTime(hour, day):
-        return dt.strptime(f'0001 01 0{day} {hour}', '%Y %m %d %I:%M %p')
 
-    def getStopTime(stopHour, stopMinute):
-        return timedelta(hours = stopHour, minutes = stopMinute) + start
+def format_time(startTime, startDay=''):
+    hour, minute = [int(i) for i in startTime.split(' ')[0].split(':')]
+    day = 0
 
-    def formatOutput(difference, endDate, weekday):
-        if weekday == None:
-            if difference == 0:
-                return endDate
-            elif difference == 1:
-                return f'{endDate} (next day)'
-            else:
-                return f'{endDate} ({difference} days later)'
-        else:
-            if difference == 0:
-                return f'{endDate}, {weekday}'
-            elif difference == 1:
-                return f'{endDate}, {weekday} (next day)'
-            else:
-                return f'{endDate}, {weekday} ({difference} days later)'
+    if 'PM' in startTime:
+        hour += 12
+    if startDay != '':
+        day = WEEKDAYS.index(startDay.capitalize())
 
-    ### PARENT FUNCTION ###
-    if startDay == None:
-        start = getStartTime(startHour, '1')
+    return {'d': day, 'H': hour, 'M': minute}
+
+def add_time(startTime, duration, startDay = ''):
+    start = format_time(startTime, startDay)
+    diff = format_time(duration)
+    stop = {
+        'd': start['d'] + diff['d'],
+        'H': start['H'] + diff['H'],
+        'M': start['M'] + diff['M']
+    }
+
+    if stop['M'] > 60:
+        stop['H'] += stop['M'] // 60
+        stop['M'] = stop['M'] % 60
+    if stop['H'] > 24:
+        stop['d'] += stop['H'] // 24
+        stop['H'] = stop['H'] % 24
+
+    if stop['H'] > 12:
+        output = f"{stop['H'] - 12}:{str(stop['M']).rjust(2, '0')} PM"
+    elif stop['H'] == 12:
+        output = f"12:{str(stop['M']).rjust(2, '0')} PM"
+    elif stop['H'] == 0:
+        output = f"12:{str(stop['M']).rjust(2, '0')} AM"
     else:
-        start = getStartTime(startHour, list(day_name).index(startDay.title()) + 1)
-    stop = getStopTime(*[int(i) for i in duration.split(':')])
+        output = f"{stop['H']}:{str(stop['M']).rjust(2, '0')} AM"
 
-    endDate = stop.strftime('%I:%M %p')
-    if endDate[0] == '0':
-        endDate = endDate[1:]
+    if startDay != '':
+        output += ', ' + str(WEEKDAYS[stop['d'] % 7])
 
-    if startDay == None:
-        return formatOutput(stop.day - start.day, endDate, None)
-    else:
-        return formatOutput(stop.day - start.day, endDate, stop.strftime('%A'))
+    daydiff = stop['d'] - start['d']
+    if daydiff == 1:
+        output += ' (next day)'
+    elif daydiff > 1:
+        output += f' ({daydiff} days later)'
+
+    return output
